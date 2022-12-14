@@ -2,7 +2,7 @@ from tkinter import *
 import xml.etree.ElementTree as ET
 from geo_math import *
 import keyboard
-import numpy
+# import numpy
 from io import BytesIO
 
 root = Tk()
