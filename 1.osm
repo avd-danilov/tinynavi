@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osm version='0.6' generator='JOSM'>
+  <node id='-137709' action='modify' visible='true' lat='53.25843' lon='83.8072' />
+  <node id='-137711' action='modify' visible='true' lat='53.25842' lon='83.8071' />
+  <node id='-137719' action='modify' visible='true' lat='53.25838801789' lon='83.80711710393' />
+  <node id='-137720' action='modify' visible='true' lat='53.25841166456' lon='83.80711048508' />
+  <node id='-137721' action='modify' visible='true' lat='53.25842306648' lon='83.80722431665' />
+  <node id='-137722' action='modify' visible='true' lat='53.25839941982' lon='83.8072309355' />
+  <node id='-137723' action='modify' visible='true' lat='53.25841729973' lon='83.80716674407' />
+  <way id='-103224' action='modify' visible='true'>
+    <nd ref='-137711' />
+    <nd ref='-137709' />
+  </way>
+  <way id='-103231' action='modify' visible='true'>
+    <nd ref='-137719' />
+    <nd ref='-137720' />
+    <nd ref='-137723' />
+    <nd ref='-137721' />
+    <nd ref='-137722' />
+    <nd ref='-137719' />
+    <tag k='landuse' v='grass' />
+  </way>
+</osm>
