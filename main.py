@@ -29,6 +29,9 @@ maxcoord = {'x': 0, 'y': 0}
 mincoord = {'x': 0, 'y': 0}
 dotMin = {'x': 0, 'y': 0}
 dotMax = {'x': 0, 'y': 0}
+dot_on_merc_min = {'x': 0, 'y': 0}
+dot_on_merc_max = {'x': 0, 'y': 0}
+dot_map_merc = []
 kmx = 0
 kmy = 0
 
@@ -61,6 +64,7 @@ kmx = haversine(dotMin['x'], dotMax['y'], dotMax['x'], dotMax['y'])
 print('x, км: ', kmx)
 kmy = haversine(dotMin['x'], dotMin['y'], dotMin['x'], dotMax['y'])
 print('y, км: ', kmy)
+
 # Подберем координаты карты так, чтобы минимальная длина и ширина составляла 4*6 км
 while  kmx > 4.0:
     dotMax['x'] -= 0.000001
@@ -79,7 +83,11 @@ print('x, км: ', kmx)
 kmy = haversine(dotMin['x'], dotMin['y'], dotMin['x'], dotMax['y'])
 print('y, км: ', kmy)
 
-
+# Найдем количество точек-проекций на полученное поле
+dot_on_merc_min = LatLongToMerc(dotMin['x'], dotMin['y'])
+dot_on_merc_max = LatLongToMerc(dotMax['x'], dotMax['y'])
+dot_map_merc.append(round(dot_on_merc_max['x'] - dot_on_merc_min['x'], 0))
+dot_map_merc.append(round(dot_on_merc_max['y'] - dot_on_merc_min['y'], 0))
 
 
 
