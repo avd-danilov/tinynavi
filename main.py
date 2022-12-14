@@ -88,7 +88,7 @@ print('y, км: ', kmy)
 
 
 
-print('Нажмите Ctrl для продолжения...')
+print('Нажмите Ctrl для продолжения... ')
 keyboard.wait('Ctrl')
 
 
