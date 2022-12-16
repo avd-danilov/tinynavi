@@ -2,7 +2,7 @@ from tkinter import *
 import xml.etree.ElementTree as ET
 from geo_math import *
 import keyboard
-# import numpy
+import numpy as np
 from io import BytesIO
 
 root = Tk()
@@ -21,17 +21,16 @@ osm = tree.getroot()
 num = 1
 way = 1
 way_arr = []
-
+x_coord = 0
+y_coord = 1
 x1 = 0
 y1 = 0
 
-maxcoord = {'x': 0, 'y': 0}
-mincoord = {'x': 0, 'y': 0}
+maxcoord, mincoord = np.array([0, 0])
+dot_on_merc_min, dot_on_merc_max = np.array([0, 0])
 dotMin = {'x': 0, 'y': 0}
 dotMax = {'x': 0, 'y': 0}
-dot_on_merc_min = {'x': 0, 'y': 0}
-dot_on_merc_max = {'x': 0, 'y': 0}
-dot_map_merc = []
+dot_map_merc = np.array([])
 kmx = 0
 kmy = 0
 
@@ -55,7 +54,7 @@ for coord in osm:
         maxcoord = LatLongToMerc(float(coord.attrib["maxlon"]), float(coord.attrib["maxlat"]))
         dotMin = {'x': float(coord.attrib["minlon"]), 'y': float(coord.attrib["minlat"])}
         dotMax = {'x': float(coord.attrib["maxlon"]), 'y': float(coord.attrib["maxlat"])}
-        scale = float(canvas['width']) / (maxcoord['y'] - mincoord['y'])
+        scale = float(canvas['width']) / (maxcoord[1] - mincoord[1])
         break
 
 
@@ -86,8 +85,8 @@ print('y, км: ', kmy)
 # Найдем количество точек-проекций на полученное поле
 dot_on_merc_min = LatLongToMerc(dotMin['x'], dotMin['y'])
 dot_on_merc_max = LatLongToMerc(dotMax['x'], dotMax['y'])
-dot_map_merc.append(round(dot_on_merc_max['x'] - dot_on_merc_min['x'], 0))
-dot_map_merc.append(round(dot_on_merc_max['y'] - dot_on_merc_min['y'], 0))
+np.append(dot_map_merc, [round(dot_on_merc_max[x_coord] - dot_on_merc_min[x_coord], 0)])
+np.append(dot_map_merc, [round(dot_on_merc_max[y_coord] - dot_on_merc_min[y_coord], 0)])
 
 
 
@@ -117,8 +116,8 @@ for z, point in enumerate(way_arr):                                             
         for element in osm:
             if element.tag == 'node' and element.attrib["id"] == i:
                 res = LatLongToMerc(float(element.attrib["lon"]), float(element.attrib["lat"])) # если нашли то переделываем координаты в проекцию и умножаем на масштаб карты
-                y = (maxcoord['y'] - res['y']) * scale
-                x = (res['x'] - mincoord['x']) * scale
+                y = (maxcoord[y_coord] - res[y_coord]) * scale
+                x = (res[x_coord] - mincoord[x_coord]) * scale
                 if x1 == 0 and y1 == 0:                                                 # А тут, чтобы нарисовать линию запоминаем предыдущие координаты и если                                                                                       # не было таких координат, то просто добавляем по единичке и ставим точку
                     x1 = x + 1
                     y1 = y + 1

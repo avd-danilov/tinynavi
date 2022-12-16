@@ -1,7 +1,7 @@
 # Python 3 program for the
 # haversine formula
 import math
-
+import numpy as np
 
 # Python 3 program for the
 # haversine formula
@@ -52,5 +52,7 @@ def LatLongToMerc(lon, lat):
     x = a * rLong
     y = a * math.log(
         math.tan(math.pi / 4 + rLat / 2) * ((1 - e * math.sin(rLat)) / (1 + e * math.sin(rLat))) ** (e / 2))
-    return {'x': x, 'y': y}
+    merc_arr = np.array([x,y])
+    # return {'x': x, 'y': y}
+    return merc_arr
 
