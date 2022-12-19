@@ -24,6 +24,22 @@ kmy = 0
 scale = 0
 puzzle = [0]
 
+
+def search_rect(coord_0: np, coord_1: np):  # Поиск номера квадрата и его координат
+
+    kv_coord = np.array([0, 0, 0, 0, 0]).astype(int)    # x0, y0, x, y, № квадрата
+    xa = (coord_1[0] - coord_0[0]) // 120                 # Вычислим смещение по х и по у
+    ya = (coord_1[1] - coord_0[1]) // 160                 #
+    kv_coord[4] = ya*60 + xa                            # Рассчитаем номер квадрата. (Массив квадратов состоит из 60*60 шт. )
+
+    # Найдем начальные и конечные координаты квадрата
+    kv_coord[0] = coord_1[0] - (coord_1[0] - coord_0[0]) % 120
+    kv_coord[1] = coord_1[1] - (coord_1[1] - coord_0[1]) % 160
+    kv_coord[2] = kv_coord[0] + 120
+    kv_coord[3] = kv_coord[1] + 160
+    return kv_coord
+
+print ('test... ', search_rect([9314446, 6998697], [9321645, 7008296]))
 for i in range(0, 3600,1):
     f_binmap.write(b"\x00\x00\x00\x00")
 
@@ -53,17 +69,17 @@ print('y, км: ', kmy)
 dot_on_merc_min = LatLongToMerc(dotMin['x'], dotMin['y'])
 dot_on_merc_max = LatLongToMerc(dotMax['x'], dotMax['y'])
 
-dot_map_merc[0] = int(round(float(dot_on_merc_max[x_coord] - dot_on_merc_min[x_coord]), 0))
-dot_map_merc[1] = int(round(float(dot_on_merc_max[y_coord] - dot_on_merc_min[y_coord]), 0))
+dot_map_merc[0] = abs(dot_on_merc_max[x_coord] - dot_on_merc_min[x_coord])
+dot_map_merc[1] = abs(dot_on_merc_max[y_coord] - dot_on_merc_min[y_coord])
 
 # Подберем координаты карты так, чтобы минимальная длина и ширина составляла 7200 на 9600 точек
 while dot_map_merc[0] != 7200:
-    if dot_map_merc[0] <7200:
+    if dot_map_merc[0] < 7200:
         dotMax['x'] += 0.000001
     else:
         dotMax['x'] -= 0.000001
     dot_on_merc_max = LatLongToMerc(dotMax['x'], dotMax['y'])
-    dot_map_merc[0] = int(round(float(dot_on_merc_max[x_coord] - dot_on_merc_min[x_coord]), 0))
+    dot_map_merc[0] = abs(dot_on_merc_max[x_coord] - dot_on_merc_min[x_coord])
 
 
 while dot_map_merc[1] != 9600:
@@ -72,13 +88,14 @@ while dot_map_merc[1] != 9600:
     else:
         dotMax['y'] -= 0.000001
     dot_on_merc_max = LatLongToMerc(dotMax['x'], dotMax['y'])
-    dot_map_merc[1] = int(round(float(dot_on_merc_max[y_coord] - dot_on_merc_min[y_coord]), 0))
+    dot_map_merc[1] = abs(dot_on_merc_max[y_coord] - dot_on_merc_min[y_coord])
 
-print("Подобранные координаты карты к 7200 на 9600 точек: ", dotMin, dotMax)
+print("Подобранные координаты карты к 7200х9600 точек: ", dotMin, dotMax)
 kmx = haversine(dotMin['x'], dotMax['y'], dotMax['x'], dotMax['y'])
 print('x, км: ', kmx, " - 7200 точек")
 kmy = haversine(dotMin['x'], dotMin['y'], dotMin['x'], dotMax['y'])
 print('y, км: ', kmy, " - 9600 точек")
+print('Начальные и конечные координаты x и у:', dot_on_merc_min, dot_on_merc_max)
 
 # Найдем количество точек-проекций на полученное поле
 

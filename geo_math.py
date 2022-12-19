@@ -52,7 +52,7 @@ def LatLongToMerc(lon, lat):
     x = a * rLong
     y = a * math.log(
         math.tan(math.pi / 4 + rLat / 2) * ((1 - e * math.sin(rLat)) / (1 + e * math.sin(rLat))) ** (e / 2))
-    merc_arr = np.array([x,y])
+    merc_arr = np.array([x, y]).astype(int)
     # return {'x': x, 'y': y}
     return merc_arr
 
