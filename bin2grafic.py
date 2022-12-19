@@ -30,8 +30,8 @@ def b2g_create(coord_max: np, coord_min: np, filename: str):
             x_fromfile = int.from_bytes(filebin.read(4), byteorder='big', signed=True)      # считали координаты по х
             y_fromfile = int.from_bytes(filebin.read(4), byteorder='big', signed=True)      # считали координаты по у
             # print(x_fromfile, y_fromfile)
-            y = (coord_max[1] - y_fromfile) * 0.2
-            x = (x_fromfile - coord_min[0]) * 0.2
+            y = (coord_max[1] - y_fromfile) * scale
+            x = (x_fromfile - coord_min[0]) * scale
             if x1 == 0 and y1 == 0:                                                 # А тут, чтобы нарисовать линию запоминаем предыдущие координаты и если                                                                                       # не было таких координат, то просто добавляем по единичке и ставим точку
                 x1 = x + 1
                 y1 = y + 1
