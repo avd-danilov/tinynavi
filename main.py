@@ -18,13 +18,13 @@ maxcoord, mincoord = np.array([0, 0])
 dot_on_merc_min, dot_on_merc_max = np.array([0, 0])
 dotMin = {'x': 0, 'y': 0}
 dotMax = {'x': 0, 'y': 0}
-dot_map_merc = np.array([])
+dot_map_merc = np.array([0, 0])
 kmx = 0
 kmy = 0
 scale = 0
 puzzle = [0]
 
-for i in range(0, 1120,1):
+for i in range(0, 3600,1):
     f_binmap.write(b"\x00\x00\x00\x00")
 
 
@@ -50,33 +50,37 @@ print('x, км: ', kmx)
 kmy = haversine(dotMin['x'], dotMin['y'], dotMin['x'], dotMax['y'])
 print('y, км: ', kmy)
 
-# Подберем координаты карты так, чтобы минимальная длина и ширина составляла 4*6 км
-while  kmx > 4.0:
-    dotMax['x'] -= 0.000001
-    kmx = haversine(dotMin['x'], dotMax['y'], dotMax['x'], dotMax['y'])
-while kmy > 6.0:
-    dotMax['y'] -= 0.000001
-    kmy = haversine(dotMin['x'], dotMin['y'], dotMin['x'], dotMax['y'])
-
-dotMax['x'] += 0.000001
-dotMax['x'] = round(dotMax['x'], 5)
-dotMax['y'] += 0.000001
-dotMax['y'] = round(dotMax['y'], 5)
-print("Подобранные координаты карты к 4х6 км: ", dotMin, dotMax)
-kmx = haversine(dotMin['x'], dotMax['y'], dotMax['x'], dotMax['y'])
-print('x, км: ', kmx)
-kmy = haversine(dotMin['x'], dotMin['y'], dotMin['x'], dotMax['y'])
-print('y, км: ', kmy)
-
-# Найдем количество точек-проекций на полученное поле
 dot_on_merc_min = LatLongToMerc(dotMin['x'], dotMin['y'])
 dot_on_merc_max = LatLongToMerc(dotMax['x'], dotMax['y'])
-np.append(dot_map_merc, [round(dot_on_merc_max[x_coord] - dot_on_merc_min[x_coord], 0)])
-np.append(dot_map_merc, [round(dot_on_merc_max[y_coord] - dot_on_merc_min[y_coord], 0)])
+
+dot_map_merc[0] = int(round(float(dot_on_merc_max[x_coord] - dot_on_merc_min[x_coord]), 0))
+dot_map_merc[1] = int(round(float(dot_on_merc_max[y_coord] - dot_on_merc_min[y_coord]), 0))
+
+# Подберем координаты карты так, чтобы минимальная длина и ширина составляла 7200 на 9600 точек
+while dot_map_merc[0] != 7200:
+    if dot_map_merc[0] <7200:
+        dotMax['x'] += 0.000001
+    else:
+        dotMax['x'] -= 0.000001
+    dot_on_merc_max = LatLongToMerc(dotMax['x'], dotMax['y'])
+    dot_map_merc[0] = int(round(float(dot_on_merc_max[x_coord] - dot_on_merc_min[x_coord]), 0))
 
 
+while dot_map_merc[1] != 9600:
+    if dot_map_merc[1] < 9600:
+        dotMax['y'] += 0.000001
+    else:
+        dotMax['y'] -= 0.000001
+    dot_on_merc_max = LatLongToMerc(dotMax['x'], dotMax['y'])
+    dot_map_merc[1] = int(round(float(dot_on_merc_max[y_coord] - dot_on_merc_min[y_coord]), 0))
 
+print("Подобранные координаты карты к 7200 на 9600 точек: ", dotMin, dotMax)
+kmx = haversine(dotMin['x'], dotMax['y'], dotMax['x'], dotMax['y'])
+print('x, км: ', kmx, " - 7200 точек")
+kmy = haversine(dotMin['x'], dotMin['y'], dotMin['x'], dotMax['y'])
+print('y, км: ', kmy, " - 9600 точек")
 
+# Найдем количество точек-проекций на полученное поле
 
 
 
@@ -99,20 +103,20 @@ for element in osm:
 write_bytes = io.BytesIO(len(way_arr).to_bytes(4, 'big', signed=True))  #добавим количество дорог
 f_binmap.write(write_bytes.getvalue())
 
-for z, point in enumerate(way_arr):                                                     #теперь поищем в объектах node файла .osm наш id из массива way_arr
-    point.insert(0, f_binmap.tell())                                                    #добавим ссылку на положение в файле начала списка и координат
-    point.insert(3, len(point) - 3)
+for z, point in enumerate(way_arr):                                                     # теперь поищем в объектах node файла .osm наш id из массива way_arr
+    point.insert(0, f_binmap.tell())                                                    # добавим ссылку в массив на положение в файле начала списка и координат
+    point.insert(3, len(point) - 3)                                                     # добавим в массив way_arr количество считываемых координат
     if point[1] == 'highway':
-        f_binmap.write(b"\x00")                                          #Добавим тип дороги
+        f_binmap.write(b"\x00")                                                         # Добавим тип дороги
     elif point[1] == 'railway':
         f_binmap.write(b"\x01")
-    write_bytes = io.BytesIO(int(point[3]).to_bytes(4, 'big', signed=True)) #Добавим количество считываемых координат
+    write_bytes = io.BytesIO(int(point[3]).to_bytes(4, 'big', signed=True))             # Добавим в файл количество считываемых координат
     f_binmap.write(write_bytes.getvalue())
     for i in point:
 
         for element in osm:
             if element.tag == 'node' and element.attrib["id"] == i:
-                res = LatLongToMerc(float(element.attrib["lon"]), float(element.attrib["lat"])) # если нашли то переделываем координаты в проекцию и умножаем на масштаб карты
+                res = LatLongToMerc(float(element.attrib["lon"]), float(element.attrib["lat"])) # если нашли то переделываем координаты в проекцию
                 write_bytes = io.BytesIO(int(round(res[x_coord], 0)).to_bytes(4, 'big', signed=True))
                 f_binmap.write(write_bytes.getvalue())
                 write_bytes = io.BytesIO(int(round(res[y_coord], 0)).to_bytes(4, 'big', signed=True))
@@ -123,4 +127,8 @@ for z, point in enumerate(way_arr):                                             
     print("\rProgress...", round(z / len(way_arr) * 100), "%")              # ну а тут типа прогресс рисуем в консольке
 f_binmap.close()
 
+
 b2g_create(maxcoord, mincoord, 'myfile.bin')
+
+
+# разбиваем мысленно все запланированное поле 7200Х9600 на квадраты размером по 120х160 метров (формат дисплея 3:4) и создадим массив списков. Списков будет 6000м/30 =

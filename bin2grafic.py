@@ -20,15 +20,15 @@ def b2g_create(coord_max: np, coord_min: np, filename: str):
     way_type = 0
     scale = float(canvas['width']) / (coord_max[1] - coord_min[1])
     filebin = open(filename, 'rb')
-    filebin.seek(4480, 0)
-    quantity_way = int.from_bytes(filebin.read(4), byteorder='big', signed=True)
+    filebin.seek(14400, 0)
+    quantity_way = int.from_bytes(filebin.read(4), byteorder='big', signed=True)            # Считали количество линий в файле
     print('Всего дорог: ', quantity_way)
     for i in range(0, quantity_way):
-        way_type = int.from_bytes(filebin.read(1), byteorder='big', signed=True)
-        way_dots = int.from_bytes(filebin.read(4), byteorder='big', signed=True)
+        way_type = int.from_bytes(filebin.read(1), byteorder='big', signed=True)            # считали тип линии - дороги
+        way_dots = int.from_bytes(filebin.read(4), byteorder='big', signed=True)            # считали количество точек дороги
         for j in range(0, way_dots):
-            x_fromfile = int.from_bytes(filebin.read(4), byteorder='big', signed=True)
-            y_fromfile = int.from_bytes(filebin.read(4), byteorder='big', signed=True)
+            x_fromfile = int.from_bytes(filebin.read(4), byteorder='big', signed=True)      # считали координаты по х
+            y_fromfile = int.from_bytes(filebin.read(4), byteorder='big', signed=True)      # считали координаты по у
             # print(x_fromfile, y_fromfile)
             y = (coord_max[1] - y_fromfile) * 0.2
             x = (x_fromfile - coord_min[0]) * 0.2
