@@ -16,6 +16,7 @@ y_coord = 1
 
 maxcoord, mincoord = np.array([0, 0])
 dot_on_merc_min, dot_on_merc_max = np.array([0, 0])
+
 dotMin = {'x': 0, 'y': 0}
 dotMax = {'x': 0, 'y': 0}
 dot_map_merc = np.array([0, 0])
@@ -25,22 +26,9 @@ scale = 0
 puzzle = [0]
 
 
-def search_rect(coord_0: np, coord_1: np):  # Поиск номера квадрата и его координат
-
-    kv_coord = np.array([0, 0, 0, 0, 0]).astype(int)    # x0, y0, x, y, № квадрата
-    xa = (coord_1[0] - coord_0[0]) // 120                 # Вычислим смещение по х и по у
-    ya = (coord_1[1] - coord_0[1]) // 160                 #
-    kv_coord[4] = ya*60 + xa                            # Рассчитаем номер квадрата. (Массив квадратов состоит из 60*60 шт. )
-
-    # Найдем начальные и конечные координаты квадрата
-    kv_coord[0] = coord_1[0] - (coord_1[0] - coord_0[0]) % 120
-    kv_coord[1] = coord_1[1] - (coord_1[1] - coord_0[1]) % 160
-    kv_coord[2] = kv_coord[0] + 120
-    kv_coord[3] = kv_coord[1] + 160
-    return kv_coord
-
 print ('test... ', search_rect([9314446, 6998697], [9321645, 7008296]))
-for i in range(0, 3600,1):
+print('test...', equation([9314446, 6998697], [9321645, 7008296]))
+for i in range(0, 3600, 1):
     f_binmap.write(b"\x00\x00\x00\x00")
 
 
@@ -108,12 +96,13 @@ keyboard.wait('Ctrl')
 for element in osm:
 
     if element.tag == 'way':                                                            # Если элемент равен way то будем искать там дочерний элемент tag
-        print(way, ": way:", element.attrib["id"])
-        way = way + 1
+
 
         for child in element:
             if child.tag == 'tag':                                                      # Если нашли tag, то посмотрим есть ли аттрибут К равный дороге или жд путям
                 if child.attrib["k"] == 'railway' or child.attrib["k"] == 'highway':
+                    print(way, ": way:", element.attrib["id"])
+                    way = way + 1
                     way_arr.append([child.attrib["k"], element.attrib["id"]])           # добавим массив с элементами типа объекта и его ID
                     Obj_create(element)                                                 # передадим текущий элемент итерируемого объекта из карты
 
@@ -145,7 +134,7 @@ for z, point in enumerate(way_arr):                                             
 f_binmap.close()
 
 
-b2g_create(maxcoord, mincoord, 'myfile.bin')
+# b2g_create(maxcoord, mincoord, 'myfile.bin')
 
 
-# разбиваем мысленно все запланированное поле 7200Х9600 на квадраты размером по 120х160 метров (формат дисплея 3:4) и создадим массив списков. Списков будет 6000м/30 =
+
