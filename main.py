@@ -6,7 +6,7 @@ import numpy as np
 from io import BytesIO
 from bin2grafic import *
 f_binmap = open('myfile.bin', 'wb')
-tree = ET.parse('map.osm')
+tree = ET.parse('map2.osm')
 osm = tree.getroot()
 num = 1
 way = 1
@@ -54,8 +54,8 @@ print('x, км: ', kmx)
 kmy = haversine(dotMin['x'], dotMin['y'], dotMin['x'], dotMax['y'])
 print('y, км: ', kmy)
 
-dot_on_merc_min = LatLongToMerc(dotMin['x'], dotMin['y'])
-dot_on_merc_max = LatLongToMerc(dotMax['x'], dotMax['y'])
+dot_on_merc_min = LatLongToMerc(dotMin['x'], dotMin['y']).copy()
+dot_on_merc_max = LatLongToMerc(dotMax['x'], dotMax['y']).copy()
 
 dot_map_merc[0] = abs(dot_on_merc_max[x_coord] - dot_on_merc_min[x_coord])
 dot_map_merc[1] = abs(dot_on_merc_max[y_coord] - dot_on_merc_min[y_coord])
@@ -66,7 +66,7 @@ while dot_map_merc[0] != 7200:
         dotMax['x'] += 0.000001
     else:
         dotMax['x'] -= 0.000001
-    dot_on_merc_max = LatLongToMerc(dotMax['x'], dotMax['y'])
+    dot_on_merc_max = LatLongToMerc(dotMax['x'], dotMax['y']).copy()
     dot_map_merc[0] = abs(dot_on_merc_max[x_coord] - dot_on_merc_min[x_coord])
 
 
@@ -75,7 +75,7 @@ while dot_map_merc[1] != 9600:
         dotMax['y'] += 0.000001
     else:
         dotMax['y'] -= 0.000001
-    dot_on_merc_max = LatLongToMerc(dotMax['x'], dotMax['y'])
+    dot_on_merc_max = LatLongToMerc(dotMax['x'], dotMax['y']).copy()
     dot_map_merc[1] = abs(dot_on_merc_max[y_coord] - dot_on_merc_min[y_coord])
 
 print("Подобранные координаты карты к 7200х9600 точек: ", dotMin, dotMax)
@@ -133,8 +133,5 @@ for z, point in enumerate(way_arr):                                             
     print("\rProgress...", round(z / len(way_arr) * 100), "%")              # ну а тут типа прогресс рисуем в консольке
 f_binmap.close()
 
-
+# addLinkways('myfile.bin', [-3012917  4656062], [-3005717  4665662])
 # b2g_create(maxcoord, mincoord, 'myfile.bin')
-
-
-
