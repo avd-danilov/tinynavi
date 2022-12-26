@@ -24,18 +24,6 @@ def haversine(lon1, lat1, lon2, lat2):
     return float(rad * c)
 
 
-# # Driver code
-# if __name__ == "__main__":
-#     lat1 = 53.2932424
-#     lon1 = 83.6871166
-#     lat2 = 53.2932229
-#     lon2 = 83.6907539
-#
-#     # print(haversine(lat1, lon1, lat2, lon2), "K.M.")
-
-# This code is contributed
-# by ChitraNayal
-
 def LatLongToMerc(lon, lat):
     if lat > 89.5:
         lat = 89.5
@@ -56,6 +44,7 @@ def LatLongToMerc(lon, lat):
     # return {'x': x, 'y': y}
     return merc_arr
 
+
 def search_rect(coord_0: np, coord_1: np):  # Поиск номера квадрата 120х160 и его координат coord_0 это начальные координаты карты, coord_1 это координаты точки
 
     kv_coord = np.array([0, 0, 0, 0, 0]).astype(int)    # x0, y0, x, y, № квадрата
@@ -70,6 +59,7 @@ def search_rect(coord_0: np, coord_1: np):  # Поиск номера квадр
     kv_coord[3] = kv_coord[1] + 160
     return kv_coord
 
+
 def equation(a: np, b: np):
     kx_b = np.array([0, 0]).astype(float)
 
@@ -83,15 +73,27 @@ def equation(a: np, b: np):
     return kx_b
 
 
-def addLinkways(filename: str, dot_on_merc_min: np, dot_on_merc_max: np):  # разбиваем мысленно все запланированное поле 7200Х9600 на квадраты размером по 120х160 метров (формат дисплея 3:4) и создадим массив списков. Списков будет 6000м/30 =
+def search_intersection(kx_b: np, x=None, y=None):  # Поиск точки пересечения прямой и линии по х или у
+    k = kx_b[0]
+    b = kx_b[1]
+    if x is None:
+        x = (y-b)/k
+        return x
+    if y is None:
+        y = k*x+b
+        return y
+
+def addLinkways(filename: str, dot_on_merc_min: np, dot_on_merc_max: np):  # разбиваем мысленно все запланированное поле 7200Х9600 на квадраты размером
+    # по 120х160 метров (формат дисплея 3:4) и создадим массив списков. Списков будет 6000м/30 =
 
     dotA, dotB = np.array([0, 0]).astype(int)
-    x, k = 0, 0
+    x, k = 0, 0 #дефайны
     y, b = 1, 1
     flag_outrange = 0
     flag_copy_link = 0
     filebin = open(filename, 'rb')
     linkway = 0
+    kv_intersec = []
     linklist = []  # Список ссылок на дороги. Количество квадратов 60х60 = 3600. Каждый квадрат содержит какие то дороги. Вычислим какие далее...
     for i in range(0, 3600):
         linklist.append([0])
@@ -117,10 +119,10 @@ def addLinkways(filename: str, dot_on_merc_min: np, dot_on_merc_max: np):  # р�
                 else:
                     flag_outrange = 1       #Запомним, что первая точка дороги была вне обозначенной карты
                 break
+
             kv_num = search_rect(dot_on_merc_min, dotB)[4]   # принадлежит ли эта точка нашим координатам?
 
             if 0 <= kv_num < 3600:                                    # Если не принадлежит, запоминаем координаты как предыдущую точку и выходим на итерацию следующей точки
-
                 for copy_link in linklist[kv_num]:               # Проверим, нет ли уже ссылки на эту дорогу в в этом квадрате
                     if copy_link == linkway:
                         flag_copy_link = 1
@@ -138,12 +140,12 @@ def addLinkways(filename: str, dot_on_merc_min: np, dot_on_merc_max: np):  # р�
             y_a = kx_b[k]* dotA[x] + kx_b[b]      # ашли абсциссы - x_ и ординаты y_ точек А и B
             y_b = kx_b[k]* dotB[x] + kx_b[b]
             x_a = (dotA[y] - kx_b[b]) / kx_b[k]
-            # лежат ли они в диапазоне нашей карты?
-            if x_a < dot_on_merc_min[x] and  x_a > dot_on_merc_max[x] and y_a < dot_on_merc_min[y] and  y_a > dot_on_merc_max[y]:
+            x_b = (dotB[y] - kx_b[b]) / kx_b[k]
+            if dot_on_merc_min[x] <= search_intersection(kx_b, y=dot_on_merc_min[y]) <= dot_on_merc_max[x]:
+                for intsc in range(dot_on_merc_min[y], dot_on_merc_max[y], 160):
+                    search_rect(dot_on_merc_min, search_intersection(kx_b, y=intsc))
+            search_intersection(kx_b, x=dot_on_merc_max[x])
 
-                break
-
-            search_rect(dot_on_merc_min,)
             dotA = dotB.copy()
         dotA = [0, 0]
 
