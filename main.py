@@ -6,7 +6,7 @@ import numpy as np
 from io import BytesIO
 from bin2grafic import *
 f_binmap = open('myfile.bin', 'wb')
-tree = ET.parse('map2.osm')
+tree = ET.parse('map4.osm')
 osm = tree.getroot()
 num = 1
 way = 1
@@ -26,8 +26,8 @@ scale = 0
 puzzle = [0]
 
 
-print ('test... ', search_rect([9314446, 6998697], [9321645, 7008296]))
-print('test...', equation([9314446, 6998697], [9321645, 7008296]))
+# print ('test... ', search_rect([9314446, 6998697], [9321645, 7008296]))
+# print('test...', equation([9314446, 6998697], [9321645, 7008296]))
 for i in range(0, 3600, 1):
     f_binmap.write(b"\x00\x00\x00\x00")
 
@@ -133,5 +133,5 @@ for z, point in enumerate(way_arr):                                             
     print("\rProgress...", round(z / len(way_arr) * 100), "%")              # ну а тут типа прогресс рисуем в консольке
 f_binmap.close()
 
-# addLinkways('myfile.bin', [-3012917  4656062], [-3005717  4665662])
+addLinkways('myfile.bin', dot_on_merc_min, dot_on_merc_max)
 # b2g_create(maxcoord, mincoord, 'myfile.bin')

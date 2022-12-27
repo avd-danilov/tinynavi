@@ -1,15 +1,7 @@
-# Python 3 program for the
-# haversine formula
 import math
 import numpy as np
 
-import warnings
 
-#suppress warnings
-warnings. filterwarnings('ignore')
-
-# Python 3 program for the
-# haversine formula
 def haversine(lon1, lat1, lon2, lat2):
     # distance between latitudes
     # and longitudes
@@ -134,7 +126,7 @@ def addLinkways(filename: str, dot_on_merc_min: np, dot_on_merc_max: np):  # р�
                 if (x_a <= active_intrsc_x <= x_b or x_b <= active_intrsc_x <= x_a) and dot_on_merc_min[x] <= active_intrsc_x <= dot_on_merc_max[x]:    # Если отрезок линии пересекает текущую линию У в диапазоне своих абсцисс и
                     kv_intersec = search_rect(dot_on_merc_min, [active_intrsc_x, intsc]).copy()                              # диапазоне границ карты, то подставляем найденую точку пересечения в поиск квадрата и запишем эту дорогу в квадрат
                     for i in linklist[kv_intersec[4]]:             # Проверим, нет ли уже ссылки на эту дорогу в в этом квадрате
-                        if i == kv_intersec[4]:
+                        if i == linkway:
                             flag_copy_link = 1
                             break                               # Если нашли, ставим флаг и выходим из поиска
                     if flag_copy_link == 0:
@@ -147,7 +139,7 @@ def addLinkways(filename: str, dot_on_merc_min: np, dot_on_merc_max: np):  # р�
                 if (y_a <= active_intrsc_y <= y_b or y_b <= active_intrsc_y <= y_a) and dot_on_merc_min[y] <= active_intrsc_y <= dot_on_merc_max[y]:    # Если отрезок линии пересекает текущую линию X в диапазоне своих абсцисс и
                     kv_intersec = search_rect(dot_on_merc_min, [intsc, active_intrsc_y]).copy()                              # диапазоне границ карты, то подставляем найденую точку пересечения в поиск квадрата и запишем эту дорогу в квадрат
                     for i in linklist[kv_intersec[4]]:             # Проверим, нет ли уже ссылки на эту дорогу в в этом квадрате
-                        if i == kv_intersec[4]:
+                        if i == linkway:
                             flag_copy_link = 1
                             break                               # Если нашли, ставим флаг и выходим из поиска
                     if flag_copy_link == 0:
@@ -158,4 +150,4 @@ def addLinkways(filename: str, dot_on_merc_min: np, dot_on_merc_max: np):  # р�
             dotA = dotB.copy()
         dotA = [0, 0].copy()
     print('finish')
-addLinkways('myfile.bin', [-3012917, 4656062], [-3005717, 4665662])
+# addLinkways('myfile.bin', [-3012917, 4656062], [-3005717, 4665662]) map2

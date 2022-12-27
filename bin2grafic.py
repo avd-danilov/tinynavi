@@ -45,4 +45,4 @@ def b2g_create(coord_max: np, coord_min: np, filename: str):
         y1 = 0
     filebin.close()
     canvas.mainloop()
-b2g_create( [-3012917,4656062], [-3005717,4665662], 'myfile.bin')
+# b2g_create( [-3012917,4656062], [-3005717,4665662], 'myfile.bin')
