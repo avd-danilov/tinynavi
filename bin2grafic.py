@@ -20,7 +20,7 @@ def b2g_create(coord_max: np, coord_min: np, filename: str):
     way_type = 0
     scale = float(canvas['width']) / (coord_max[1] - coord_min[1])
     filebin = open(filename, 'rb')
-    filebin.seek(14400, 0)                                                                  # Сдвигаемся, потому что первые байты отведены для сылок на списки отображений дорог (в отображениях дорог будут ссылки на сами дороги)
+    filebin.seek(28800, 0)                                                                  # Сдвигаемся, потому что первые байты отведены для сылок на списки отображений дорог (в отображениях дорог будут ссылки на сами дороги)
     quantity_way = int.from_bytes(filebin.read(4), byteorder='big', signed=True)            # Считали количество линий в файле
     print('Всего дорог: ', quantity_way)
     for i in range(0, quantity_way):

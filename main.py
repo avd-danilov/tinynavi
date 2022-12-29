@@ -6,7 +6,7 @@ import numpy as np
 from io import BytesIO
 from bin2grafic import *
 f_binmap = open('myfile.bin', 'wb')
-tree = ET.parse('map4.osm')
+tree = ET.parse('map.osm')
 osm = tree.getroot()
 num = 1
 way = 1
@@ -29,7 +29,7 @@ puzzle = [0]
 # print ('test... ', search_rect([9314446, 6998697], [9321645, 7008296]))
 # print('test...', equation([9314446, 6998697], [9321645, 7008296]))
 for i in range(0, 3600, 1):
-    f_binmap.write(b"\x00\x00\x00\x00")
+    f_binmap.write(b"\x00\x00\x00\x00\x00\x00\x00\x00")
 
 
 def Obj_create(ways):  # если в этом текущем элементе карты есть дочерние объекты nd, то добавим в конец последнего массива аттрибут ref - номер точки с координатами
@@ -41,8 +41,8 @@ def Obj_create(ways):  # если в этом текущем элементе к
 # Найдем начальные и конечные координаты карты
 for coord in osm:
     if coord.tag == 'bounds':
-        mincoord = LatLongToMerc(float(coord.attrib["minlon"]), float(coord.attrib["minlat"]))
-        maxcoord = LatLongToMerc(float(coord.attrib["maxlon"]), float(coord.attrib["maxlat"]))
+        mincoord = LatLongSpherToMerc(float(coord.attrib["minlon"]), float(coord.attrib["minlat"]))
+        maxcoord = LatLongSpherToMerc(float(coord.attrib["maxlon"]), float(coord.attrib["maxlat"]))
         dotMin = {'x': float(coord.attrib["minlon"]), 'y': float(coord.attrib["minlat"])}
         dotMax = {'x': float(coord.attrib["maxlon"]), 'y': float(coord.attrib["maxlat"])}
         break
@@ -54,8 +54,8 @@ print('x, км: ', kmx)
 kmy = haversine(dotMin['x'], dotMin['y'], dotMin['x'], dotMax['y'])
 print('y, км: ', kmy)
 
-dot_on_merc_min = LatLongToMerc(dotMin['x'], dotMin['y']).copy()
-dot_on_merc_max = LatLongToMerc(dotMax['x'], dotMax['y']).copy()
+dot_on_merc_min = LatLongSpherToMerc(dotMin['x'], dotMin['y']).copy()
+dot_on_merc_max = LatLongSpherToMerc(dotMax['x'], dotMax['y']).copy()
 
 dot_map_merc[0] = abs(dot_on_merc_max[x_coord] - dot_on_merc_min[x_coord])
 dot_map_merc[1] = abs(dot_on_merc_max[y_coord] - dot_on_merc_min[y_coord])
@@ -66,7 +66,7 @@ while dot_map_merc[0] != 7200:
         dotMax['x'] += 0.000001
     else:
         dotMax['x'] -= 0.000001
-    dot_on_merc_max = LatLongToMerc(dotMax['x'], dotMax['y']).copy()
+    dot_on_merc_max = LatLongSpherToMerc(dotMax['x'], dotMax['y']).copy()
     dot_map_merc[0] = abs(dot_on_merc_max[x_coord] - dot_on_merc_min[x_coord])
 
 
@@ -75,7 +75,7 @@ while dot_map_merc[1] != 9600:
         dotMax['y'] += 0.000001
     else:
         dotMax['y'] -= 0.000001
-    dot_on_merc_max = LatLongToMerc(dotMax['x'], dotMax['y']).copy()
+    dot_on_merc_max = LatLongSpherToMerc(dotMax['x'], dotMax['y']).copy()
     dot_map_merc[1] = abs(dot_on_merc_max[y_coord] - dot_on_merc_min[y_coord])
 
 print("Подобранные координаты карты к 7200х9600 точек: ", dotMin, dotMax)
@@ -122,7 +122,7 @@ for z, point in enumerate(way_arr):                                             
 
         for element in osm:
             if element.tag == 'node' and element.attrib["id"] == i:
-                res = LatLongToMerc(float(element.attrib["lon"]), float(element.attrib["lat"])) # если нашли то переделываем координаты в проекцию
+                res = LatLongSpherToMerc(float(element.attrib["lon"]), float(element.attrib["lat"])) # если нашли то переделываем координаты в проекцию
                 write_bytes = io.BytesIO(int(round(res[x_coord], 0)).to_bytes(4, 'big', signed=True))
                 f_binmap.write(write_bytes.getvalue())
                 write_bytes = io.BytesIO(int(round(res[y_coord], 0)).to_bytes(4, 'big', signed=True))
@@ -134,4 +134,4 @@ for z, point in enumerate(way_arr):                                             
 f_binmap.close()
 
 addLinkways('myfile.bin', dot_on_merc_min, dot_on_merc_max)
-# b2g_create(maxcoord, mincoord, 'myfile.bin')
+b2g_create(maxcoord, mincoord, 'myfile.bin')

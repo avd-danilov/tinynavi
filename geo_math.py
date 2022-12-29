@@ -21,6 +21,23 @@ def haversine(lon1, lat1, lon2, lat2):
     return float(rad * c)
 
 
+def LatLongSpherToMerc(lon, lat):
+    if lat > 89.5:
+        lat = 89.5
+    if lat < -89.5:
+        lat = -89.5
+
+    rLat = math.radians(lat)
+    rLong = math.radians(lon)
+
+    a = 6378137.0
+    x = round(a * rLong, 0)
+    y = round(a * math.log(math.tan(math.pi / 4 + rLat / 2)), 0)
+    merc_arr = np.array([x, y]).astype(int)
+
+    return merc_arr
+
+
 def LatLongToMerc(lon, lat):
     if lat > 89.5:
         lat = 89.5
@@ -44,16 +61,19 @@ def LatLongToMerc(lon, lat):
 
 def search_rect(coord_0: np, coord_1: np):  # Поиск номера квадрата 120х160 и его координат coord_0 это начальные координаты карты, coord_1 это координаты точки
 
-    kv_coord = np.array([0, 0, 0, 0, 0]).astype(int)    # x0, y0, x, y, № квадрата
-    xa = abs((coord_1[0] - coord_0[0]) // 120)                 # Вычислим смещение по х и по у
-    ya = abs((coord_1[1] - coord_0[1]) // 160)                 #
-    kv_coord[4] = ya*60 + xa                            # Рассчитаем номер квадрата. (Массив квадратов состоит из 60*60 шт. )
+    if coord_0[0] <= coord_1[0] and coord_0[1] <= coord_1[1]:
+        kv_coord = np.array([0, 0, 0, 0, 0]).astype(int)    # x0, y0, x, y, № квадрата
+        xa = abs((coord_1[0] - coord_0[0]) // 120)                 # Вычислим смещение по х и по у
+        ya = abs((coord_1[1] - coord_0[1]) // 160)                 #
+        kv_coord[4] = ya*60 + xa                            # Рассчитаем номер квадрата. (Массив квадратов состоит из 60*60 шт. )
 
-    # Найдем начальные и конечные координаты квадрата
-    kv_coord[0] = coord_1[0] - (coord_1[0] - coord_0[0]) % 120
-    kv_coord[1] = coord_1[1] - (coord_1[1] - coord_0[1]) % 160
-    kv_coord[2] = kv_coord[0] + 120
-    kv_coord[3] = kv_coord[1] + 160
+        # Найдем начальные и конечные координаты квадрата
+        kv_coord[0] = coord_1[0] - (coord_1[0] - coord_0[0]) % 120
+        kv_coord[1] = coord_1[1] - (coord_1[1] - coord_0[1]) % 160
+        kv_coord[2] = kv_coord[0] + 120
+        kv_coord[3] = kv_coord[1] + 160
+    else:
+        kv_coord = [0, 0, 0, 0, 3600]
     return kv_coord
 
 
@@ -89,7 +109,7 @@ def addLinkways(filename: str, dot_on_merc_min: np, dot_on_merc_max: np):  # р�
     y, b = 1, 1
     flag_outrange = 0
     flag_copy_link = 0
-    filebin = open(filename, 'rb')
+    filebin = open(filename, 'rb+')
     linkway = 0
     active_intrsc = 0
     kv_intersec = 0
@@ -97,7 +117,7 @@ def addLinkways(filename: str, dot_on_merc_min: np, dot_on_merc_max: np):  # р�
     for i in range(0, 3600):
         linklist.append([])
 
-    filebin.seek(14400, 0)  # Сдвигаемся, потому что первые байты отведены для сылок на списки отображений дорог (в отображениях дорог будут ссылки на сами дороги)
+    filebin.seek(28800, 0)  # Сдвигаемся, потому что первые байты отведены для сылок на списки отображений дорог (в отображениях дорог будут ссылки на сами дороги)
     quantity_way = int.from_bytes(filebin.read(4), byteorder='big', signed=True)  # Считали количество линий в файле
     print('Всего дорог: ', quantity_way)
     for way in range(0, quantity_way):
@@ -109,21 +129,31 @@ def addLinkways(filename: str, dot_on_merc_min: np, dot_on_merc_max: np):  # р�
         for dot in range(0, way_dots):
             dotB[x] = int.from_bytes(filebin.read(4), byteorder='big', signed=True)  # считали координаты по х
             dotB[y] = int.from_bytes(filebin.read(4), byteorder='big', signed=True)  # считали координаты по у
-
+            kv = search_rect(dot_on_merc_min, dotB)[4]
             if dotA[x] == 0 and dotA[y] == 0:                                 # А тут, если это первая точка дороги
                 dotA = dotB.copy()
+                kv = search_rect(dot_on_merc_min, dotA)[4]
+                if 0 <= kv <= 3599:
+                    linklist[kv].append(linkway)
                 continue
+
+            if 0 <= kv <= 3599:
+                for i in linklist[kv]:  # Проверим, нет ли уже ссылки на эту дорогу в в этом квадрате
+                    if i == linkway:
+                        flag_copy_link = 1
+                        break  # Если нашли, ставим флаг и выходим из поиска
+                if flag_copy_link == 0:
+                    linklist[kv].append(linkway)  # Если не было копии, записываем ссылку
+                else:
+                    flag_copy_link = 0
 
             # Теперь найдем уравнение прямой и найдем где отрезок может пересекать квадраты и какие квадраты
             kx_b = equation(dotA, dotB).copy()    # получили уравнение y = kx+b
-            y_a = kx_b[k]* dotA[x] + kx_b[b]      # ашли абсциссы - x_ и ординаты y_ точек А и B
-            y_b = kx_b[k]* dotB[x] + kx_b[b]
-            x_a = (dotA[y] - kx_b[b]) / kx_b[k]
-            x_b = (dotB[y] - kx_b[b]) / kx_b[k]
+
 
             for intsc in range(dot_on_merc_min[y], dot_on_merc_max[y], 160):        # Сначала пробежим по y =
                 active_intrsc_x = search_intersection(kx_b, y=intsc)
-                if (x_a <= active_intrsc_x <= x_b or x_b <= active_intrsc_x <= x_a) and dot_on_merc_min[x] <= active_intrsc_x <= dot_on_merc_max[x]:    # Если отрезок линии пересекает текущую линию У в диапазоне своих абсцисс и
+                if (dotA[x] <= active_intrsc_x <= dotB[x] or dotB[x] <= active_intrsc_x <= dotA[x]) and dot_on_merc_min[x] <= active_intrsc_x <= dot_on_merc_max[x]:    # Если отрезок линии пересекает текущую линию У в диапазоне своих абсцисс и
                     kv_intersec = search_rect(dot_on_merc_min, [active_intrsc_x, intsc]).copy()                              # диапазоне границ карты, то подставляем найденую точку пересечения в поиск квадрата и запишем эту дорогу в квадрат
                     for i in linklist[kv_intersec[4]]:             # Проверим, нет ли уже ссылки на эту дорогу в в этом квадрате
                         if i == linkway:
@@ -136,7 +166,7 @@ def addLinkways(filename: str, dot_on_merc_min: np, dot_on_merc_max: np):  # р�
 
             for intsc in range(dot_on_merc_min[x], dot_on_merc_max[x], 120):        # Сначала пробежим по y =
                 active_intrsc_y = search_intersection(kx_b, x=intsc)
-                if (y_a <= active_intrsc_y <= y_b or y_b <= active_intrsc_y <= y_a) and dot_on_merc_min[y] <= active_intrsc_y <= dot_on_merc_max[y]:    # Если отрезок линии пересекает текущую линию X в диапазоне своих абсцисс и
+                if (dotA[y] <= active_intrsc_y <= dotB[y] or dotB[y] <= active_intrsc_y <= dotA[y]) and dot_on_merc_min[y] <= active_intrsc_y <= dot_on_merc_max[y]:    # Если отрезок линии пересекает текущую линию X в диапазоне своих абсцисс и
                     kv_intersec = search_rect(dot_on_merc_min, [intsc, active_intrsc_y]).copy()                              # диапазоне границ карты, то подставляем найденую точку пересечения в поиск квадрата и запишем эту дорогу в квадрат
                     for i in linklist[kv_intersec[4]]:             # Проверим, нет ли уже ссылки на эту дорогу в в этом квадрате
                         if i == linkway:
@@ -149,5 +179,18 @@ def addLinkways(filename: str, dot_on_merc_min: np, dot_on_merc_max: np):  # р�
 
             dotA = dotB.copy()
         dotA = [0, 0].copy()
-    print('finish')
-# addLinkways('myfile.bin', [-3012917, 4656062], [-3005717, 4665662]) map2
+    print('Write to file...')
+    filebin.seek(0,2)
+    filebin.write(b"\x00")
+    filebin.seek(-1, 2)
+
+    for link in linklist:
+        current_link = filebin.tell()
+        if len(link) != 0:
+            for way in link:
+                file
+
+
+    filebin.close()
+
+# addLinkways('myfile.bin', [9314447, 7032967], [9321647, 7042567])
