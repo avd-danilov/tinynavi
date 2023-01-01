@@ -1,6 +1,6 @@
 import math
 import numpy as np
-
+import io
 
 def haversine(lon1, lat1, lon2, lat2):
     # distance between latitudes
@@ -59,21 +59,27 @@ def LatLongToMerc(lon, lat):
     return merc_arr
 
 
-def search_rect(coord_0: np, coord_1: np):  # Поиск номера квадрата 120х160 и его координат coord_0 это начальные координаты карты, coord_1 это координаты точки
+def search_rect(coord_0: np, coord_1: np = None, kv=None):  # Поиск номера квадрата 120х160 и его координат coord_0 это начальные координаты карты, coord_1 это координаты точки
 
-    if coord_0[0] <= coord_1[0] and coord_0[1] <= coord_1[1]:
-        kv_coord = np.array([0, 0, 0, 0, 0]).astype(int)    # x0, y0, x, y, № квадрата
-        xa = abs((coord_1[0] - coord_0[0]) // 120)                 # Вычислим смещение по х и по у
-        ya = abs((coord_1[1] - coord_0[1]) // 160)                 #
-        kv_coord[4] = ya*60 + xa                            # Рассчитаем номер квадрата. (Массив квадратов состоит из 60*60 шт. )
+    kv_coord = np.array([0, 0, 0, 0, 0]).astype(int)  # x0, y0, x, y, № квадрата
+    if kv is None:
+        if coord_0[0] <= coord_1[0] and coord_0[1] <= coord_1[1]:
+            xa = abs((coord_1[0] - coord_0[0]) // 120)                 # Вычислим смещение по х и по у
+            ya = abs((coord_1[1] - coord_0[1]) // 160)                 #
+            kv_coord[4] = ya*60 + xa                            # Рассчитаем номер квадрата. (Массив квадратов состоит из 60*60 шт. )
 
-        # Найдем начальные и конечные координаты квадрата
-        kv_coord[0] = coord_1[0] - (coord_1[0] - coord_0[0]) % 120
-        kv_coord[1] = coord_1[1] - (coord_1[1] - coord_0[1]) % 160
+            # Найдем начальные и конечные координаты квадрата
+            kv_coord[0] = coord_1[0] - (coord_1[0] - coord_0[0]) % 120
+            kv_coord[1] = coord_1[1] - (coord_1[1] - coord_0[1]) % 160
+            kv_coord[2] = kv_coord[0] + 120
+            kv_coord[3] = kv_coord[1] + 160
+        else:
+            kv_coord = [0, 0, 0, 0, 3600]
+    elif coord_0 is not None:
+        kv_coord[0] = kv % 60 * 120 + coord_0[0]
+        kv_coord[1] = kv // 60 * 160 + coord_0[1]
         kv_coord[2] = kv_coord[0] + 120
         kv_coord[3] = kv_coord[1] + 160
-    else:
-        kv_coord = [0, 0, 0, 0, 3600]
     return kv_coord
 
 
@@ -117,7 +123,7 @@ def addLinkways(filename: str, dot_on_merc_min: np, dot_on_merc_max: np):  # р�
     for i in range(0, 3600):
         linklist.append([])
 
-    filebin.seek(28800, 0)  # Сдвигаемся, потому что первые байты отведены для сылок на списки отображений дорог (в отображениях дорог будут ссылки на сами дороги)
+    filebin.seek(14400, 0)  # Сдвигаемся, потому что первые байты отведены для сылок на списки отображений дорог (в отображениях дорог будут ссылки на сами дороги)
     quantity_way = int.from_bytes(filebin.read(4), byteorder='big', signed=True)  # Считали количество линий в файле
     print('Всего дорог: ', quantity_way)
     for way in range(0, quantity_way):
@@ -184,11 +190,23 @@ def addLinkways(filename: str, dot_on_merc_min: np, dot_on_merc_max: np):  # р�
     filebin.write(b"\x00")
     filebin.seek(-1, 2)
 
-    for link in linklist:
+    for i, link in enumerate(linklist):
         current_link = filebin.tell()
+        filebin.seek(i*4, 0)
+        write_bytes = io.BytesIO(current_link.to_bytes(4, 'big', signed=False))  # Добавим адрес в файле на ссылки дорог
+        filebin.write(write_bytes.getvalue())
         if len(link) != 0:
+            filebin.seek(current_link, 0)
+            write_bytes = io.BytesIO(len(link).to_bytes(4, 'big', signed=False))  # Добавим в файл количество ссылок на текущий квадрат
+            filebin.write(write_bytes.getvalue())
             for way in link:
-                file
+                write_bytes = io.BytesIO(way.to_bytes(4, 'big', signed=False))  # Добавим в файл ссылки на дорогу
+                filebin.write(write_bytes.getvalue())
+        else:
+            filebin.seek(current_link, 0)
+            filebin.write(b"\x00")
+
+
 
 
     filebin.close()

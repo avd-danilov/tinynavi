@@ -29,7 +29,7 @@ puzzle = [0]
 # print ('test... ', search_rect([9314446, 6998697], [9321645, 7008296]))
 # print('test...', equation([9314446, 6998697], [9321645, 7008296]))
 for i in range(0, 3600, 1):
-    f_binmap.write(b"\x00\x00\x00\x00\x00\x00\x00\x00")
+    f_binmap.write(b"\x00\x00\x00\x00")
 
 
 def Obj_create(ways):  # если в этом текущем элементе карты есть дочерние объекты nd, то добавим в конец последнего массива аттрибут ref - номер точки с координатами
@@ -106,7 +106,7 @@ for element in osm:
                     way_arr.append([child.attrib["k"], element.attrib["id"]])           # добавим массив с элементами типа объекта и его ID
                     Obj_create(element)                                                 # передадим текущий элемент итерируемого объекта из карты
 
-write_bytes = io.BytesIO(len(way_arr).to_bytes(4, 'big', signed=True))  #добавим количество дорог
+write_bytes = io.BytesIO(len(way_arr).to_bytes(4, 'big', signed=False))  #добавим количество дорог
 f_binmap.write(write_bytes.getvalue())
 
 for z, point in enumerate(way_arr):                                                     # теперь поищем в объектах node файла .osm наш id из массива way_arr
@@ -116,7 +116,7 @@ for z, point in enumerate(way_arr):                                             
         f_binmap.write(b"\x00")                                                         # Добавим тип дороги
     elif point[1] == 'railway':
         f_binmap.write(b"\x01")
-    write_bytes = io.BytesIO(int(point[3]).to_bytes(4, 'big', signed=True))             # Добавим в файл количество считываемых координат
+    write_bytes = io.BytesIO(int(point[3]).to_bytes(4, 'big', signed=False))             # Добавим в файл количество считываемых координат
     f_binmap.write(write_bytes.getvalue())
     for i in point:
 
@@ -134,4 +134,5 @@ for z, point in enumerate(way_arr):                                             
 f_binmap.close()
 
 addLinkways('myfile.bin', dot_on_merc_min, dot_on_merc_max)
-b2g_create(maxcoord, mincoord, 'myfile.bin')
+slide_tinynavi(83.7081782, 53.2903668, dot_on_merc_min, 'myfile.bin')
+# b2g_create(maxcoord, mincoord, 'myfile.bin')
