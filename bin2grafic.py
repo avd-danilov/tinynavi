@@ -53,10 +53,21 @@ def slide_tinynavi(coordinates_lon, coordinates_lat, dot_merc_min: np, filename)
     x1, y1 = 0, 0
     ways = np.array([]).astype(int)
     snap = np.array([]).astype(int)
+    sc = 0.02
     d = LatLongSpherToMerc(coordinates_lon, coordinates_lat)
-    canvas = Canvas(root, bg='grey', width=240, height=320)
+    canvas = Canvas(root, bg='black', width=240, height=320)
+    width_2 = float(canvas['width'])/2/sc
+    height_2 = float(canvas['height'])/2/sc
     canvas.pack()
     kv = search_rect(dot_merc_min, coord_1=d)
+    # Отрисуем красным пунктиром квадрат карты в котором лежит текущее положение. Текущее положение будем размещать в
+    # центре
+    canvas.create_oval(width_2*sc-6, height_2*sc-6, width_2*sc+6, height_2*sc+6, fill='green')
+    canvas.create_line((kv[0]-(d[0]-width_2))*sc, ((d[1]+height_2) - kv[1])*sc, (kv[0]-(d[0]-width_2))*sc, ((d[1]+height_2)-kv[3])*sc, fill='red', dash=(1, 3))
+    canvas.create_line((kv[2]-(d[0]-width_2))*sc, ((d[1]+height_2) - kv[1])*sc, (kv[2]-(d[0]-width_2))*sc, ((d[1]+height_2)-kv[3])*sc, fill='red', dash=(1, 3))
+    canvas.create_line((kv[0]-(d[0]-width_2))*sc, ((d[1]+height_2) - kv[1])*sc, (kv[2]-(d[0]-width_2))*sc, ((d[1]+height_2)-kv[1])*sc, fill='red', dash=(1, 3))
+    canvas.create_line((kv[0]-(d[0]-width_2))*sc, ((d[1]+height_2) - kv[3])*sc, (kv[2]-(d[0]-width_2))*sc, ((d[1]+height_2)-kv[3])*sc, fill='red', dash=(1, 3))
+
     snap = np.append(snap, [kv[4]-61, kv[4]-60, kv[4]-59, kv[4]-1, kv[4], kv[4]+1, kv[4]+59, kv[4]+60, kv[4]+61])
     filebin = open(filename, 'rb')
     for i in snap:
@@ -76,8 +87,8 @@ def slide_tinynavi(coordinates_lon, coordinates_lat, dot_merc_min: np, filename)
             for j in range(0, way_dots):
                 x_fromfile = int.from_bytes(filebin.read(4), byteorder='big', signed=True)      # считали координаты по х
                 y_fromfile = int.from_bytes(filebin.read(4), byteorder='big', signed=True)      # считали координаты по у
-                y = (rect_coord[3] - y_fromfile) * 0.883
-                x = (x_fromfile - rect_coord[0]) * 0.883
+                y = ((d[1]+height_2) - y_fromfile) * sc
+                x = (x_fromfile - (d[0]-width_2)) * sc
                 if x1 == 0 and y1 == 0:                                                 # А тут, чтобы нарисовать линию запоминаем предыдущие координаты и если                                                                                       # не было таких координат, то просто добавляем по единичке и ставим точку
                     x1 = x + 1
                     y1 = y + 1
@@ -95,6 +106,6 @@ def slide_tinynavi(coordinates_lon, coordinates_lat, dot_merc_min: np, filename)
 
     canvas.mainloop()
 
-slide_tinynavi(83.7013578, 53.3087144, [9314447, 7032967], 'myfile.bin')
-
+# slide_tinynavi(83.7013578, 53.3087144, [9314447, 7032967], 'myfile.bin')
+slide_tinynavi( 83.6820956, 53.3183696, [9314447, 7032967], 'myfile.bin')
 # b2g_create( [-3012917,4656062], [-3005717,4665662], 'myfile.bin')
