@@ -120,8 +120,6 @@ for z, point in enumerate(way_arr):                                             
     f_binmap.write(write_bytes.getvalue())
     for i in point:
         for element in osm:
-            if element== 0:
-
             if element.tag == 'node' and element.attrib["id"] == i:
                 res = LatLongSpherToMerc(float(element.attrib["lon"]), float(element.attrib["lat"])) # если нашли то переделываем координаты в проекцию
                 write_bytes = io.BytesIO(int(round(res[x_coord], 0)).to_bytes(4, 'big', signed=True))
