@@ -6,7 +6,7 @@ import numpy as np
 from io import BytesIO
 from bin2grafic import *
 f_binmap = open('myfile.bin', 'wb')
-tree = ET.parse('map.osm')
+tree = ET.parse('UNBB.osm')
 osm = tree.getroot()
 num = 1
 way = 1
@@ -15,7 +15,7 @@ x_coord = 0
 y_coord = 1
 
 maxcoord, mincoord = np.array([0, 0])
-dot_on_merc_min, dot_on_merc_max = np.array([0, 0])
+dot_on_merc_min, dot_on_merc_max = np.array([0, 0]).astype(int)
 
 dotMin = {'x': 0, 'y': 0}
 dotMax = {'x': 0, 'y': 0}
@@ -119,8 +119,9 @@ for z, point in enumerate(way_arr):                                             
     write_bytes = io.BytesIO(int(point[3]).to_bytes(4, 'big', signed=False))             # Добавим в файл количество считываемых координат
     f_binmap.write(write_bytes.getvalue())
     for i in point:
-
         for element in osm:
+            if element== 0:
+
             if element.tag == 'node' and element.attrib["id"] == i:
                 res = LatLongSpherToMerc(float(element.attrib["lon"]), float(element.attrib["lat"])) # если нашли то переделываем координаты в проекцию
                 write_bytes = io.BytesIO(int(round(res[x_coord], 0)).to_bytes(4, 'big', signed=True))
@@ -134,5 +135,6 @@ for z, point in enumerate(way_arr):                                             
 f_binmap.close()
 
 addLinkways('myfile.bin', dot_on_merc_min, dot_on_merc_max)
-slide_tinynavi(83.7081782, 53.2903668, dot_on_merc_min, 'myfile.bin')
-# b2g_create(maxcoord, mincoord, 'myfile.bin')
+b2g_create(maxcoord, mincoord, 'myfile.bin')
+#slide_tinynavi(83.7081782, 53.2903668, dot_on_merc_min, 'myfile.bin')
+#slide_tinynavi(83.5464278, 53.360612, dot_on_merc_min, 'myfile.bin')

@@ -206,6 +206,18 @@ def addLinkways(filename: str, dot_on_merc_min: np, dot_on_merc_max: np):  # Ñ€Ð
             filebin.seek(current_link, 0)
             filebin.write(b"\x00")
 
+    filebin.seek(0,2)
+    write_bytes = io.BytesIO(dot_on_merc_min[0].tobytes())
+    filebin.write(write_bytes.getvalue())
+
+    write_bytes = io.BytesIO(dot_on_merc_min[1].tobytes())
+    filebin.write(write_bytes.getvalue())
+
+    write_bytes = io.BytesIO(dot_on_merc_max[0].tobytes())
+    filebin.write(write_bytes.getvalue())
+
+    write_bytes = io.BytesIO(dot_on_merc_max[1].tobytes())
+    filebin.write(write_bytes.getvalue())
 
 
 

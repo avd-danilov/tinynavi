@@ -53,7 +53,7 @@ def slide_tinynavi(coordinates_lon, coordinates_lat, dot_merc_min: np, filename)
     x1, y1 = 0, 0
     ways = np.array([]).astype(int)
     snap = np.array([]).astype(int)
-    sc = 0.02
+    sc = 1
     d = LatLongSpherToMerc(coordinates_lon, coordinates_lat)
     canvas = Canvas(root, bg='black', width=240, height=320)
     width_2 = float(canvas['width'])/2/sc
@@ -71,7 +71,7 @@ def slide_tinynavi(coordinates_lon, coordinates_lat, dot_merc_min: np, filename)
     snap = np.append(snap, [kv[4]-61, kv[4]-60, kv[4]-59, kv[4]-1, kv[4], kv[4]+1, kv[4]+59, kv[4]+60, kv[4]+61])
     filebin = open(filename, 'rb')
     for i in snap:
-        rect_coord = search_rect(dot_merc_min, kv=i)
+        #rect_coord = search_rect(dot_merc_min, kv=i)
         filebin.seek(i*4, 0)
         link_ways = int.from_bytes(filebin.read(4), byteorder='big', signed=False) # Считали ссылку на список ссылок дорог
         filebin.seek(link_ways, 0)
@@ -105,7 +105,7 @@ def slide_tinynavi(coordinates_lon, coordinates_lat, dot_merc_min: np, filename)
     filebin.close()
 
     canvas.mainloop()
-
+#slide_tinynavi(83.5464278, 53.360612, [9298417, 7045933], 'myfile.bin')
 # slide_tinynavi(83.7013578, 53.3087144, [9314447, 7032967], 'myfile.bin')
-slide_tinynavi( 83.6820956, 53.3183696, [9314447, 7032967], 'myfile.bin')
+#slide_tinynavi( 83.6820956, 53.3183696, [9314447, 7032967], 'myfile.bin')
 # b2g_create( [-3012917,4656062], [-3005717,4665662], 'myfile.bin')
